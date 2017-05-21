@@ -1,17 +1,20 @@
 
 #include <stdio.h>
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include <opencv2\opencv.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/opencv.hpp>
 #include <math.h>
+#include <vector>
 #include "utils.h"
 
 #define USE_VIDEO 1
 
+#if defined(_WIN32)
 #undef MIN
 #undef MAX
 #define MAX(a,b) ((a)<(b)?(b):(a))
 #define MIN(a,b) ((a)>(b)?(b):(a))
+#endif
 
 void crop(IplImage* src,  IplImage* dest, CvRect rect) {
     cvSetImageROI(src, rect); 

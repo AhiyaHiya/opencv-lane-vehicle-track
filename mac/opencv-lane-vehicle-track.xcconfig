@@ -1,0 +1,12 @@
+//
+//  opencv-lane-vehicle-track.xcconfig
+//  opencv_lane_vehicle_track
+//
+//  Created by Jaime Rios on 5/20/17.
+//  Copyright © 2017 jaimerios.com. All rights reserved.
+//
+
+
+GCC_C_LANGUAGE_STANDARD = c11
+CLANG_CXX_LANGUAGE_STANDARD = c++14
+
