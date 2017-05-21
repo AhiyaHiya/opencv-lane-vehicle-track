@@ -7,7 +7,7 @@
 #include <vector>
 #include "utils.h"
 
-#define USE_VIDEO 1
+//#define USE_VIDEO 1
 
 #if defined(_WIN32)
 #undef MIN
@@ -532,7 +532,7 @@ int main(void)
 {
 
 #ifdef USE_VIDEO
-	CvCapture *input_video = cvCreateFileCapture("road.avi");
+    CvCapture *input_video = cvCreateFileCapture("/Users/jaimerios/Development/GitHub/opencv-lane-vehicle-track_master/bin/road.avi");
 #else
 	CvCapture *input_video = cvCaptureFromCAM(0);
 #endif
@@ -549,20 +549,29 @@ int main(void)
 	video_size.height = (int) cvGetCaptureProperty(input_video, CV_CAP_PROP_FRAME_HEIGHT);
 	video_size.width = (int) cvGetCaptureProperty(input_video, CV_CAP_PROP_FRAME_WIDTH);
 
-	long current_frame = 0;
-	int key_pressed = 0;
+	auto key_pressed = 0;
 	IplImage *frame = NULL;
 
-	CvSize frame_size = cvSize(video_size.width, video_size.height/2);
-	IplImage *temp_frame = cvCreateImage(frame_size, IPL_DEPTH_8U, 3);
+	auto frame_size = cvSize(video_size.width, video_size.height/2);
+    
+    auto del_image=[](IplImage* ptr)
+    {
+        if(ptr){cvReleaseImage(&ptr);}
+    };
+    
+    auto temp_frame =
+    std::shared_ptr<IplImage>(cvCreateImage(frame_size, IPL_DEPTH_8U, 3),
+                              del_image);
+    
 	IplImage *grey = cvCreateImage(frame_size, IPL_DEPTH_8U, 1);
 	IplImage *edges = cvCreateImage(frame_size, IPL_DEPTH_8U, 1);
 	IplImage *half_frame = cvCreateImage(cvSize(video_size.width/2, video_size.height/2), IPL_DEPTH_8U, 3);
 
 	CvMemStorage* houghStorage = cvCreateMemStorage(0);
 	CvMemStorage* haarStorage = cvCreateMemStorage(0);
-	CvHaarClassifierCascade* cascade = (CvHaarClassifierCascade*)cvLoad("haar/cars3.xml");
-
+    auto cascade = reinterpret_cast<CvHaarClassifierCascade*>(cvLoad("/Users/jaimerios/Development/GitHub/opencv-lane-vehicle-track_master/bin/haar/cars3.xml"));
+    assert(cascade && "Error found");
+    
 	//cvSetCaptureProperty(input_video, CV_CAP_PROP_POS_FRAMES, current_frame);
 	while(key_pressed != 27) {
 
@@ -576,8 +585,8 @@ int main(void)
 		//cvCvtColor(temp_frame, grey, CV_BGR2GRAY); // convert to grayscale
 
 		// we're interested only in road below horizont - so crop top image portion off
-		crop(frame, temp_frame, cvRect(0,frame_size.height,frame_size.width,frame_size.height));
-		cvCvtColor(temp_frame, grey, CV_BGR2GRAY); // convert to grayscale
+		crop(frame, temp_frame.get(), cvRect(0,frame_size.height,frame_size.width,frame_size.height));
+		cvCvtColor(temp_frame.get(), grey, CV_BGR2GRAY); // convert to grayscale
 		
 		// Perform a Gaussian blur ( Convolving with 5 X 5 Gaussian) & detect edges
 		cvSmooth(grey, grey, CV_GAUSSIAN, 5, 5);
@@ -589,7 +598,7 @@ int main(void)
 		CvSeq* lines = cvHoughLines2(edges, houghStorage, CV_HOUGH_PROBABILISTIC, 
 			rho, theta, HOUGH_TRESHOLD, HOUGH_MIN_LINE_LENGTH, HOUGH_MAX_LINE_GAP);
 
-		processLanes(lines, edges, temp_frame);
+		processLanes(lines, edges, temp_frame.get());
 		
 		// process vehicles
 		vehicleDetection(half_frame, cascade, haarStorage);
@@ -598,12 +607,12 @@ int main(void)
 		cvMoveWindow("Half-frame", half_frame->width*2+10, 0); 
 
 		// show middle line
-		cvLine(temp_frame, cvPoint(frame_size.width/2,0), 
+		cvLine(temp_frame.get(), cvPoint(frame_size.width/2,0),
 			cvPoint(frame_size.width/2,frame_size.height), CV_RGB(255, 255, 0), 1);
 
 		cvShowImage("Grey", grey);
 		cvShowImage("Edges", edges);
-		cvShowImage("Color", temp_frame);
+		cvShowImage("Color", temp_frame.get());
 		
 		cvMoveWindow("Grey", 0, 0); 
 		cvMoveWindow("Edges", 0, frame_size.height+25);
@@ -618,7 +627,7 @@ int main(void)
 
 	cvReleaseImage(&grey);
 	cvReleaseImage(&edges);
-	cvReleaseImage(&temp_frame);
+	
 	cvReleaseImage(&half_frame);
 
 	cvReleaseCapture(&input_video);
