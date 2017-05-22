@@ -364,8 +364,7 @@ void vehicleDetection(IplImage*                half_frame,
     if (rects->total > 0)
     {
         printf("\thaar detected %d car hypotheses\n", rects->total);
-        auto edges =
-            cvCreateImage(cvSize(half_frame->width, half_frame->height), IPL_DEPTH_8U, 1);
+        auto edges = cvCreateImage(cvSize(half_frame->width, half_frame->height), IPL_DEPTH_8U, 1);
         cvCanny(half_frame, edges, CANNY_MIN_TRESHOLD, CANNY_MAX_TRESHOLD);
 
         /* validate vehicles */
@@ -653,31 +652,21 @@ void processLanes(CvSeq* lines, IplImage* edges, IplImage* temp_frame)
            2);
 }
 
-int main(void)
+void runLoop(CvCapture* input_video)
 {
-
-#ifdef USE_VIDEO
-    auto input_video = cvCreateFileCapture(
-        "/Users/jaimerios/Development/GitHub/opencv-lane-vehicle-track_master/bin/road.avi");
-#else
-    auto input_video = cvCaptureFromCAM(0);
-#endif
-
-    if (input_video == NULL)
-    {
-        fprintf(stderr, "Error: Can't open video\n");
-        return -1;
-    }
-
     auto font = CvFont{};
     cvInitFont(&font, CV_FONT_VECTOR0, 0.25f, 0.25f);
 
-    auto video_size   = CvSize{};
-    video_size.height = (int)cvGetCaptureProperty(input_video, CV_CAP_PROP_FRAME_HEIGHT);
-    video_size.width  = (int)cvGetCaptureProperty(input_video, CV_CAP_PROP_FRAME_WIDTH);
+    auto video_size = CvSize{};
+    video_size.height =
+        static_cast< int32_t >(cvGetCaptureProperty(input_video, CV_CAP_PROP_FRAME_HEIGHT));
+    video_size.width =
+        static_cast< int32_t >(cvGetCaptureProperty(input_video, CV_CAP_PROP_FRAME_WIDTH));
 
-    auto key_pressed = 0;
-    auto frame_size  = cvSize(video_size.width, video_size.height / 2);
+    const auto w = video_size.width;
+    const auto h = video_size.height / 2;
+
+    auto frame_size = cvSize(w, h);
 
     auto del_image = [](IplImage* ptr) {
         if (ptr)
@@ -689,10 +678,11 @@ int main(void)
     auto temp_frame =
         std::shared_ptr< IplImage >(cvCreateImage(frame_size, IPL_DEPTH_8U, 3), del_image);
 
-    auto grey  = cvCreateImage(frame_size, IPL_DEPTH_8U, 1);
-    auto edges = cvCreateImage(frame_size, IPL_DEPTH_8U, 1);
-    auto half_frame =
-        cvCreateImage(cvSize(video_size.width / 2, video_size.height / 2), IPL_DEPTH_8U, 3);
+    auto grey  = std::shared_ptr< IplImage >(cvCreateImage(frame_size, IPL_DEPTH_8U, 1), del_image);
+    auto edges = std::shared_ptr< IplImage >(cvCreateImage(frame_size, IPL_DEPTH_8U, 1), del_image);
+    auto half_frame = std::shared_ptr< IplImage >(
+        cvCreateImage(cvSize(video_size.width / 2, video_size.height / 2), IPL_DEPTH_8U, 3),
+        del_image);
 
     auto houghStorage = cvCreateMemStorage(0);
     auto haarStorage  = cvCreateMemStorage(0);
@@ -701,33 +691,34 @@ int main(void)
     assert(cascade && "Error found");
 
     // cvSetCaptureProperty(input_video, CV_CAP_PROP_POS_FRAMES, current_frame);
-    while (key_pressed != 27)
+    auto       key_pressed = 0;
+    const auto escape_key  = 27;
+    while (key_pressed != escape_key)
     {
-
         const auto frame = cvQueryFrame(input_video);
-        if (frame == NULL)
+        if (frame == nullptr)
         {
             fprintf(stderr, "Error: null frame received\n");
-            return -1;
+            return;
         }
 
-        cvPyrDown(frame, half_frame, CV_GAUSSIAN_5x5); // Reduce the image by 2
+        cvPyrDown(frame, half_frame.get(), CV_GAUSSIAN_5x5); // Reduce the image by 2
         // cvCvtColor(temp_frame, grey, CV_BGR2GRAY); // convert to grayscale
 
         // we're interested only in road below horizont - so crop top image portion off
         crop(frame,
              temp_frame.get(),
              cvRect(0, frame_size.height, frame_size.width, frame_size.height));
-        cvCvtColor(temp_frame.get(), grey, CV_BGR2GRAY); // convert to grayscale
+        cvCvtColor(temp_frame.get(), grey.get(), CV_BGR2GRAY); // convert to grayscale
 
         // Perform a Gaussian blur ( Convolving with 5 X 5 Gaussian) & detect edges
-        cvSmooth(grey, grey, CV_GAUSSIAN, 5, 5);
-        cvCanny(grey, edges, CANNY_MIN_TRESHOLD, CANNY_MAX_TRESHOLD);
+        cvSmooth(grey.get(), grey.get(), CV_GAUSSIAN, 5, 5);
+        cvCanny(grey.get(), edges.get(), CANNY_MIN_TRESHOLD, CANNY_MAX_TRESHOLD);
 
         // do Hough transform to find lanes
         const auto rho   = 1;
         const auto theta = CV_PI / 180;
-        auto       lines = cvHoughLines2(edges,
+        auto       lines = cvHoughLines2(edges.get(),
                                    houghStorage,
                                    CV_HOUGH_PROBABILISTIC,
                                    rho,
@@ -736,12 +727,12 @@ int main(void)
                                    HOUGH_MIN_LINE_LENGTH,
                                    HOUGH_MAX_LINE_GAP);
 
-        processLanes(lines, edges, temp_frame.get());
+        processLanes(lines, edges.get(), temp_frame.get());
 
         // process vehicles
-        vehicleDetection(half_frame, cascade, haarStorage);
-        drawVehicles(half_frame);
-        cvShowImage("Half-frame", half_frame);
+        vehicleDetection(half_frame.get(), cascade, haarStorage);
+        drawVehicles(half_frame.get());
+        cvShowImage("Half-frame", half_frame.get());
         cvMoveWindow("Half-frame", half_frame->width * 2 + 10, 0);
 
         // show middle line
@@ -751,8 +742,8 @@ int main(void)
                CV_RGB(255, 255, 0),
                1);
 
-        cvShowImage("Grey", grey);
-        cvShowImage("Edges", edges);
+        cvShowImage("Grey", grey.get());
+        cvShowImage("Edges", edges.get());
         cvShowImage("Color", temp_frame.get());
 
         cvMoveWindow("Grey", 0, 0);
@@ -765,11 +756,27 @@ int main(void)
     cvReleaseHaarClassifierCascade(&cascade);
     cvReleaseMemStorage(&haarStorage);
     cvReleaseMemStorage(&houghStorage);
+}
 
-    cvReleaseImage(&grey);
-    cvReleaseImage(&edges);
+int main(void)
+{
+#ifdef USE_VIDEO
+    auto input_video = cvCreateFileCapture(
+        "/Users/jaimerios/Development/GitHub/opencv-lane-vehicle-track_master/bin/road.avi");
+#else
+    auto input_video = std::shared_ptr< CvCapture >(cvCreateCameraCapture(0), [](CvCapture* ptr) {
+        if (ptr != nullptr)
+        {
+            cvReleaseCapture(&ptr);
+        }
+    });
 
-    cvReleaseImage(&half_frame);
+#endif
 
-    cvReleaseCapture(&input_video);
+    if (input_video == nullptr)
+    {
+        fprintf(stderr, "Error: Can't open video\n");
+        return -1;
+    }
+    runLoop(input_video.get());
 }
