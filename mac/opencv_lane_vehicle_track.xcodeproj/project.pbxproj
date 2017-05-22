@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		2DDB9CB01ED1445900D2B750 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 2DDB9CAF1ED1445900D2B750 /* main.cpp */; };
-		2DDB9CB21ED1446200D2B750 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = 2DDB9CB11ED1446200D2B750 /* README.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -127,7 +126,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -e\n\nmain()\n{\n    cp -v ${OPENCV_LIB_PATH}/libopencv_core.3.2.0.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_objdetect.3.2.0.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_imgproc.3.2.0.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_highgui.3.2.0.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_videoio.3.2.0.dylib ${BUILT_PRODUCTS_DIR}\n    \n    cp -v ${OPENCV_LIB_PATH}/libopencv_core.3.2.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_objdetect.3.2.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_imgproc.3.2.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_highgui.3.2.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_videoio.3.2.dylib ${BUILT_PRODUCTS_DIR}\n    \n    cp -v ${OPENCV_LIB_PATH}/libopencv_ml.3.2.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_imgcodecs.3.2.dylib ${BUILT_PRODUCTS_DIR}\n}\n\nmain";
+			shellScript = "set -e\nset -x\n\nmain()\n{\n    #local readonly VERSION=3.2\n    local readonly VERSION=3.0\n    cp -v ${OPENCV_LIB_PATH}/libopencv_core.${VERSION}.0.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_objdetect.${VERSION}.0.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_imgproc.${VERSION}.0.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_highgui.${VERSION}.0.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_videoio.${VERSION}.0.dylib ${BUILT_PRODUCTS_DIR}\n    \n    cp -v ${OPENCV_LIB_PATH}/libopencv_core.${VERSION}.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_objdetect.${VERSION}.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_imgproc.${VERSION}.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_highgui.${VERSION}.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_videoio.${VERSION}.dylib ${BUILT_PRODUCTS_DIR}\n    \n    cp -v ${OPENCV_LIB_PATH}/libopencv_ml.${VERSION}.dylib ${BUILT_PRODUCTS_DIR}\n    cp -v ${OPENCV_LIB_PATH}/libopencv_imgcodecs.${VERSION}.dylib ${BUILT_PRODUCTS_DIR}\n}\n\n\nmain";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -136,7 +135,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2DDB9CB21ED1446200D2B750 /* README.md in Sources */,
 				2DDB9CB01ED1445900D2B750 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

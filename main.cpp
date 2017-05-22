@@ -149,21 +149,21 @@ void FindResponses(IplImage* img, int startX, int endX, int y, std::vector< int 
 
 unsigned char pixel(IplImage* img, int x, int y)
 {
-    return (unsigned char)img->imageData[(y * img->width + x) * img->nChannels];
+    return static_cast<unsigned char>(img->imageData[(y * img->width + x) * img->nChannels]);
 }
 
 int findSymmetryAxisX(IplImage* half_frame, CvPoint bmin, CvPoint bmax)
 {
 
-    float value = 0;
-    int   axisX = -1; // not found
+    auto value = 0.0f;
+    auto  axisX = -1; // not found
 
     auto xmin       = bmin.x;
     auto ymin       = bmin.y;
     auto xmax       = bmax.x;
     auto ymax       = bmax.y;
     auto half_width = half_frame->width / 2;
-    auto maxi       = 1;
+    //    auto maxi       = 1;
 
     for (int x = xmin, j = 0; x < xmax; x++, j++)
     {
@@ -355,9 +355,10 @@ void vehicleDetection(IplImage*                half_frame,
     removeOldVehicleSamples(frame);
 
     // Haar Car detection
-    const double scale_factor   = 1.05; // every iteration increases scan window by 5%
-    const auto   min_neighbours = 2; // minus 1, number of rectangles, that the object consists of
-    CvSeq*       rects          = cvHaarDetectObjects(
+    const auto scale_factor   = 1.05; // every iteration increases scan window by 5%
+    const auto min_neighbours = 2;    // minus 1, number of rectangles, that the object consists of
+
+    CvSeq* rects = cvHaarDetectObjects(
         half_frame, cascade, haarStorage, scale_factor, min_neighbours, CV_HAAR_DO_CANNY_PRUNING);
 
     // Canny edge detection of the minimized frame
@@ -397,7 +398,7 @@ void vehicleDetection(IplImage*                half_frame,
                     }
                     if (index == -1)
                     { // all space used
-                        index = vehicles.size();
+                        index = static_cast< int32_t >(vehicles.size());
                         vehicles.push_back(v);
                     }
                     printf("\tnew car detected, index = %d\n", index);
@@ -410,7 +411,7 @@ void vehicleDetection(IplImage*                half_frame,
                     printf("\tcar updated, index = %d\n", index);
                 }
 
-                VehicleSample vs;
+                auto vs=VehicleSample{};
                 vs.frameDetected = frame;
                 vs.vehicleIndex  = index;
                 vs.radi          = (MAX(rc->width, rc->height)) /
@@ -431,7 +432,7 @@ void vehicleDetection(IplImage*                half_frame,
 
     removeLostVehicles(frame);
 
-    printf("\ttotal vehicles on screen: %d\n", vehicles.size());
+    printf("\ttotal vehicles on screen: %lu\n", vehicles.size());
 }
 
 void drawVehicles(IplImage* half_frame)
@@ -440,7 +441,7 @@ void drawVehicles(IplImage* half_frame)
     // show vehicles
     for (auto i = 0; i < vehicles.size(); i++)
     {
-        Vehicle* v = &vehicles[i];
+        auto* v = &vehicles[i];
         if (v->valid)
         {
             cvRectangle(half_frame, v->bmin, v->bmax, GREEN, 1);
@@ -463,17 +464,17 @@ void drawVehicles(IplImage* half_frame)
 void processSide(std::vector< Lane > lanes, IplImage* edges, bool right)
 {
 
-    Status* side = right ? &laneR : &laneL;
+    auto* side = right ? &laneR : &laneL;
 
     // response search
-    auto           w      = edges->width;
-    auto           h      = edges->height;
-    const auto     BEGINY = 0;
-    const auto     ENDY   = h - 1;
-    const auto     ENDX   = right ? (w - BORDERX) : BORDERX;
-    auto           midx   = w / 2;
-    auto           midy   = edges->height / 2;
-    unsigned char* ptr    = (unsigned char*)edges->imageData;
+    auto       w      = edges->width;
+    auto       h      = edges->height;
+    const auto BEGINY = 0;
+    const auto ENDY   = h - 1;
+    const auto ENDX   = right ? (w - BORDERX) : BORDERX;
+    auto       midx   = w / 2;
+    auto       midy   = edges->height / 2;
+    //    unsigned char* ptr    = (unsigned char*)edges->imageData;
 
     // show responses
     auto* votes = new int[lanes.size()];
@@ -489,9 +490,9 @@ void processSide(std::vector< Lane > lanes, IplImage* edges, bool right)
         {
             auto response_x = rsp[0]; // use first reponse (closest to screen center)
 
-            float dmin  = 9999999;
-            float xmin  = 9999999;
-            auto  match = -1;
+            auto dmin  = 9999999.0;
+            auto xmin  = 9999999.0;
+            auto match = -1;
             for (auto j = 0; j < lanes.size(); j++)
             {
                 // compute response point distance to current line
@@ -500,9 +501,12 @@ void processSide(std::vector< Lane > lanes, IplImage* edges, bool right)
                                     cvPoint2D32f(response_x, y));
 
                 // point on line at current y line
-                auto xline    = (y - lanes[j].b) / lanes[j].k;
+                auto xline = (y - lanes[j].b) / lanes[j].k;
+#if defined(_WIN32)
                 auto dist_mid = abs(midx - xline); // distance to midpoint
-
+#else
+                auto dist_mid = std::abs(midx - xline);
+#endif
                 // pick the best closest match to line & to screen center
                 if (match == -1 || (d <= dmin && dist_mid < xmin))
                 {
@@ -521,13 +525,16 @@ void processSide(std::vector< Lane > lanes, IplImage* edges, bool right)
         }
     }
 
-    int bestMatch = -1;
-    int mini      = 9999999;
-    for (int i = 0; i < lanes.size(); i++)
+    auto bestMatch = -1;
+    auto mini      = 9999999;
+    for (auto i = 0; i < lanes.size(); i++)
     {
-        int xline = (midy - lanes[i].b) / lanes[i].k;
-        int dist  = abs(midx - xline); // distance to midpoint
-
+        auto xline = (midy - lanes[i].b) / lanes[i].k;
+#if defined(_WIN32)
+        auto dist = abs(midx - xline); // distance to midpoint
+#else
+        auto dist = std::abs(midx - xline);
+#endif
         if (bestMatch == -1 || (votes[i] > votes[bestMatch] && dist < mini))
         {
             bestMatch = i;
@@ -537,11 +544,11 @@ void processSide(std::vector< Lane > lanes, IplImage* edges, bool right)
 
     if (bestMatch != -1)
     {
-        Lane* best   = &lanes[bestMatch];
-        float k_diff = fabs(best->k - side->k.get());
-        float b_diff = fabs(best->b - side->b.get());
+        auto* best   = &lanes[bestMatch];
+        const auto k_diff = fabs(best->k - side->k.get());
+        const auto b_diff = fabs(best->b - side->b.get());
 
-        bool update_ok = (k_diff <= K_VARY_FACTOR && b_diff <= B_VARY_FACTOR) || side->reset;
+        const auto update_ok = (k_diff <= K_VARY_FACTOR && b_diff <= B_VARY_FACTOR) || side->reset;
 
         printf("side: %s, k vary: %.4f, b vary: %.4f, lost: %s\n",
                (right ? "RIGHT" : "LEFT"),
@@ -621,12 +628,12 @@ void processLanes(CvSeq* lines, IplImage* edges, IplImage* temp_frame)
     }
 
     // show Hough lines
-    for (int i = 0; i < right.size(); i++)
+    for (auto i = 0; i < right.size(); i++)
     {
         cvLine(temp_frame, right[i].p0, right[i].p1, CV_RGB(0, 0, 255), 2);
     }
 
-    for (int i = 0; i < left.size(); i++)
+    for (auto i = 0; i < left.size(); i++)
     {
         cvLine(temp_frame, left[i].p0, left[i].p1, CV_RGB(255, 0, 0), 2);
     }
@@ -635,8 +642,8 @@ void processLanes(CvSeq* lines, IplImage* edges, IplImage* temp_frame)
     processSide(right, edges, true);
 
     // show computed lanes
-    int x  = temp_frame->width * 0.55f;
-    int x2 = temp_frame->width;
+    auto x  = temp_frame->width * 0.55f;
+    auto x2 = temp_frame->width;
     cvLine(temp_frame,
            cvPoint(x, laneR.k.get() * x + laneR.b.get()),
            cvPoint(x2, laneR.k.get() * x2 + laneR.b.get()),

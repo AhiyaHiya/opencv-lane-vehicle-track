@@ -12,8 +12,13 @@ CLANG_CXX_LANGUAGE_STANDARD = c++14
 
 LD_RUNPATH_SEARCH_PATHS = @loader_path/
 
-OPENCV_HDR_PATH=/Users/jaimerios/Development/Perforce/jaimerios_Vendors_MBP/OpenCV/3.2.0/mac/include
-OPENCV_LIB_PATH=/Users/jaimerios/Development/Perforce/jaimerios_Vendors_MBP/OpenCV/3.2.0/mac/lib
+//BASE_PATH=/Users/jaimerios/Development/Perforce/jaimerios_Vendors_MBP/OpenCV/3.2.0/mac
+BASE_PATH=/Users/jaimerios/Development/Tools/OpenCV-dist/opencv-3.0.0/mac
+OPENCV_HDR_PATH=${BASE_PATH}/include
+OPENCV_LIB_PATH=${BASE_PATH}/lib
 OTHER_CPLUSPLUSFLAGS=-isystem${OPENCV_HDR_PATH}
 
-OTHER_LDFLAGS=${OPENCV_LIB_PATH}/libopencv_core.3.2.0.dylib ${OPENCV_LIB_PATH}/libopencv_objdetect.3.2.0.dylib ${OPENCV_LIB_PATH}/libopencv_imgproc.3.2.0.dylib ${OPENCV_LIB_PATH}/libopencv_highgui.3.2.0.dylib ${OPENCV_LIB_PATH}/libopencv_videoio.3.2.0.dylib
+
+//OCV_VER=3.2
+OCV_VER=3.0
+OTHER_LDFLAGS=${OPENCV_LIB_PATH}/libopencv_core.${OCV_VER}.0.dylib ${OPENCV_LIB_PATH}/libopencv_objdetect.${OCV_VER}.0.dylib ${OPENCV_LIB_PATH}/libopencv_imgproc.${OCV_VER}.0.dylib ${OPENCV_LIB_PATH}/libopencv_highgui.${OCV_VER}.0.dylib ${OPENCV_LIB_PATH}/libopencv_videoio.${OCV_VER}.0.dylib
